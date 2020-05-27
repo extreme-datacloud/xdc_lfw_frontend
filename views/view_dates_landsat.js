@@ -3,7 +3,8 @@ function (id, type, meta, ctx) {
         
         return [
             Number(new Date(meta['onedata_json']['eml:eml']['dataset']['coverage']['temporalCoverage']['rangeOfDates']['beginDate']['calendarDate'])),
-            meta['onedata_json']['eml:eml']['dataset']['title'],
+            [meta['onedata_json']['eml:eml']['dataset']['coverage']['geographicCoverage']['geographicDescription'],
+            meta['onedata_json']['eml:eml']['dataset']['title']],
             id
         ];
     }
