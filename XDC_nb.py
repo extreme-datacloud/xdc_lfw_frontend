@@ -174,7 +174,7 @@ def is_downloaded(onedata_token, filename):
 
 
 #date is a string yyyy-mm-dd
-def find_closest_date(onedata_token, date):
+def find_closest_date(onedata_token, date, region):
     headers = {"X-Auth-Token": onedata_token}
     seconds_since_epoch = datetime.datetime.now().timestamp()
     seconds_since_epoch = int(seconds_since_epoch)*1000
@@ -189,9 +189,10 @@ def find_closest_date(onedata_token, date):
     value = ''
     min = 999999999999999
     for e in json.loads(r.content):
-        if min > abs(seconds_since_epoch - e['key']):
-            min = abs(seconds_since_epoch - e['key'])
-            value = e['value']
+        if e['value'][0] == region:
+            if min > abs(seconds_since_epoch - e['key']):
+                min = abs(seconds_since_epoch - e['key'])
+                value = e['value'][1]
     
     return value
 
