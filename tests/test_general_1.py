@@ -13,11 +13,11 @@ def supply_params():
         datetime.strptime('10-12-2018 00:00:00', "%m-%d-%Y %H:%M:%S"))
     end_date = datetime.date(
         datetime.strptime('11-10-2018 00:00:00', "%m-%d-%Y %H:%M:%S"))
-    onedata_token = ("MDAxNWxvY2F00aW9uIG9uZXpvbmUKMDAzMGlkZW500aWZpZX"
-                     "IgOTAwNGNlNzBiYWQyMTYzYzY1YWY4NTNhZjQyMGJlYWEK"
-                     "MDAxYWNpZCB00aW1lIDwgMTU4MzkxODYyOQowMDJmc2lnb"
-                     "mF00dXJlICmASYmuGx6CSPHwkf3s9pXW2szUqJPBPoFEXI"
-                     "KOZ2L00Cg")
+    onedata_token = ("MDAyOGxvY2F00aW9uIG9uZXpvbmUuY2xvdWQuY25hZi5pbmZ"
+                     "uLml00CjAwMzBpZGVudGlmaWVyIDk4OTgwNjc1MWU00NjhlZ"
+                     "jA1ODZjNzMwZDNjNjVjN2IxCjAwMWFjaWQgdGltZSA8IDE2M"
+                     "TcxNzY1NTkKMDAyZnNpZ25hdHVyZSChV36AW00frfBqr02Cp"
+                     "D3B6SxVXnVMuP8vsHE6yEqJFsKgo")
     return [start_date, end_date, onedata_token]
 
 
