@@ -685,9 +685,7 @@ def orchestrator_list_deployments(orchestrator_url):
     if orchestrator_url is None:
         orchestrator_url = 'https://xdc-paas.cloud.ba.infn.it/orchestrator/'
 
-    url = orchestrator_url + "deployments?createdBy="
-    url = url + os.environ['JUPYTERHUB_USER']
-    url = url + "@https://iam.extreme-datacloud.eu/"
+    url = orchestrator_url + "deployments"
     headers = {'Content-Type': 'application/json',
                'Authorization': 'Bearer ' + access_token}
     r = requests.get(url, headers=headers)  # GET
