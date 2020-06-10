@@ -8,105 +8,9 @@ FROM jupyter/base-notebook:latest
 MAINTAINER Fernando Aguilar <aguilarf@ifca.unican.es>
 
 USER root
-
-# Install pymysql
-RUN  apt-get update && \
-  #apt-get -y upgrade && \
-  apt-get install -y --reinstall build-essential && \
-  apt-get install -y unixodbc-dev  unixodbc-bin && \
-  apt-get install -y python-dev && \
-  apt-get install -y freetds-dev && \
-  apt-get install -y curl python3-setuptools
-
-RUN pip install --upgrade pip
-
-## Install ftp and Faker 
-RUN  apt-get update && \
-  apt-get -y upgrade && \
-  apt-get install -y ftp
-#
-RUN pip install opencv-python Faker
-
-## Install openstack client for python3
-RUN apt-get update
-RUN apt-get install -y libreadline-gplv2-dev libncursesw5-dev libssl-dev libsqlite3-dev tk-dev libgdbm-dev libc6-dev libbz2-dev
-
-RUN apt-get install -y python python-pip python-tk
-
-RUN echo 'Dependencies...' 
 RUN apt-get update && \
-    apt-get install -y libreadline-dev && \
-    apt update && \
-    apt upgrade && \
-    apt-get install -y g++  && \
-    apt-get install -y build-essential && \
-    apt-get install -y libxml2-dev
-
-ENV PATH="/usr/bin:${PATH}"
-
-##### Install tools for datamining ###
-RUN /opt/conda/bin/pip install numpy scipy matplotlib scikit-learn pandas pillow seaborn
-
-# New Version add lxml library
-#
-RUN apt-get install -y  libxml2-dev libxslt-dev
-
-RUN apt-get update && apt-get install -y iputils-ping net-tools
-RUN apt-get install gcc git build-essential mysql-client python3-setuptools libmysqlclient-dev python3-dev python3-numpy python3-pip libhdf5-serial-dev netcdf-bin libnetcdf-dev wget m4 -y
-
-#libnetcdf11
-
-#RUN wget ftp://ftp.gnu.org/gnu/m4/m4-1.4.10.tar.gz && \
-#    tar -xvzf m4-1.4.10.tar.gz && \
-#    cd m4-1.4.10 && \
-#    ./configure --prefix=/usr/local/m4 && \
-#    make && make install
-
-RUN wget ftp://ftp.unidata.ucar.edu/pub/netcdf/netcdf-4.4.0.tar.gz && \
-    tar -zxvf netcdf-4.4.0.tar.gz && \
-    rm netcdf-4.4.0.tar.gz
-RUN cd netcdf-4.4.0 && ./configure --disable-netcdf-4 --prefix=/usr/local && make && make install
-ENV NETCDF_LIBS -I/usr/local/lib
-ENV NETCDF_CFLAGS -I/usr/local/include
-RUN apt-get install software-properties-common -y
-RUN add-apt-repository ppa:ubuntugis/ubuntugis-unstable 
-RUN apt-get update -y
-RUN apt-get install libpnetcdf-dev gdal-bin python3-gdal libgdal26 -y
-#TODO libgdal1i
-
-#The following env variables will be passed thorugh the orchestrator
-ENV WQ_REGION CdP
-ENV WQ_START_DATE 01-01-2018
-ENV WQ_END_DATE 18-01-2018
-ENV WQ_ACTION cloud_coverage
-ENV ONEDATA_TOKEN 'H4rGIxCMYsJSHQg1v6BpLGAwnDL01EE6AFAs1BCg'
-ENV ONEDATA_URL 'https://oneprovider-cnaf.cloud.cnaf.infn.it'
-ENV ONEDATA_API '/api/v3/oneprovider/'
-ENV ONEDATA_SPACE LifeWatch
-ENV ONEDATA_ZONE 'https://onezone.cloud.cnaf.infn.it'
-ENV DOWNLOAD_FOLDER datasets
-
-#The following env variables will be passed thorugh the orchestrator
-# todoRUN pip3 install Cython
-
-# && \
-#    pip3 install -r requirements.txt && \
-#    python3 setup.py install
-
-WORKDIR $HOME
-
-RUN exec 3<> /etc/apt/sources.list.d/onedata.list && \
-    echo "deb [arch=amd64] http://packages.onedata.org/apt/ubuntu/1902 xenial main" >&3 && \
-    echo "deb-src [arch=amd64] http://packages.onedata.org/apt/ubuntu/1902 xenial main" >&3 && \
-    exec 3>&-
-RUN curl http://packages.onedata.org/onedata.gpg.key | apt-key add -
-RUN apt-get update && curl http://packages.onedata.org/onedata.gpg.key | apt-key add -
-#USER $NB_USER
-RUN easy_install request
-RUN conda update -n base conda
-RUN conda install ipyleaflet xmltodict scikit-image imageio netCDF4 tqdm numpy utm matplotlib pandas ipywidgets tornado=5.1.1 gdal
-RUN jupyter nbextension enable --py --sys-prefix widgetsnbextension
-
+    apt-get install git gnupg2 gcc libmysqlclient-dev wget apt-utils gdal-bin python3-gdal -y
+# Install pymysql
 RUN ls
 RUN git clone https://github.com/extreme-datacloud/xdc_lfw_data.git
 #Create config file
@@ -119,7 +23,7 @@ RUN exec 3<> ./xdc_lfw_data/wq_modules/config.py && \
     echo "onedata_mode = 1" >&3 && \
     echo "if onedata_mode == 1:" >&3 && \
     echo "" >&3 && \
-    echo "    #onedata path and info" >&3 && \ 
+    echo "    #onedata path and info" >&3 && \
     echo "    onedata_token = \"$ONEDATA_TOKEN\"" >&3 && \
     echo "    onedata_url = \"https://cloud-90-147-75-163.cloud.ba.infn.it\"" >&3 && \
     echo "    onedata_api = \"$ONEDATA_API\"" >&3 && \
@@ -129,7 +33,7 @@ RUN exec 3<> ./xdc_lfw_data/wq_modules/config.py && \
     echo "    #onedata path" >&3 && \
     echo "    datasets_path = \"/home/jovyan/datasets/LifeWatch\"" >&3 && \
     echo "" >&3 && \
-    echo "#local path and info" >&3 && \ 
+    echo "#local path and info" >&3 && \
     echo "local_path = \"/home/jovyan/lfw_datasets\"" >&3 && \
     echo "" >&3 && \
     echo "#AEMET credentials" >&3 && \
@@ -144,7 +48,7 @@ RUN exec 3<> ./xdc_lfw_data/wq_modules/config.py && \
     echo "landsat_pass = {'username':\"lifewatch\", 'password':\"xdda8\"}" >&3 && \
     echo "" >&3 && \
     echo "#available regions" >&3 && \
-    echo "regions = {'CdP': {\"id\": 210788, \"coordinates\": {\"W\":-2.830, \"S\":41.820, \"E\":-2.690, \"N\":41.910}}, 'Cogotas': {\"id\": 214571, \"coordinates\": {\"W\":-4.728, \"S\":40.657, \"E\":-4.672, \"N\":40.731}}, 'Sanabria': {\"id\": 211645, \"coordinates\": {\"W\":-6.739, \"S\":42.107, \"E\":-6.689, \"N\":42.136}}}"  >&3 && \
+    echo "regions = {'CdP': {\"id\": 210788, \"coordinates\": {\"W\":-2.830, \"S\":41.820, \"E\":-2.690, \"N\":41.910}}, 'Cogotas': {\"id\": 214571, \"coordinates\": {\"W\":-4.728, \"S\":40.657, \"E\":-4.672, \"N\":40.731}}, 'Sanabria': {\"id\": 211645, \"coordinates\": {\"W\":-6.739, \"S\":42.107, \"E\":-6.689, \"N\":42.136}}, 'ElVal': {\"id\": 254845, \"coordinates\": {\"W\":-1.841, \"S\":41.861, \"E\":-1.779, \"N\":41.892}}}"  >&3 && \
     echo "" >&3 && \
     echo "#available actions" >&3 && \
     echo "keywords = [\"cloud_mask\", \"cloud_coverage\", \"water_mask\", \"water_surface\", \"None\"]" >&3 && \
@@ -153,22 +57,46 @@ RUN exec 3<> ./xdc_lfw_data/wq_modules/config.py && \
 RUN chown -R jovyan:users ./xdc_lfw_data
 RUN cd ./xdc_lfw_data && \
     /opt/conda/bin/python setup.py install
-RUN apt-get install sudo oneclient=19.02.0.rc2-1~xenial -y
+RUN exec 3<> /etc/apt/sources.list.d/onedata.list && \
+    echo "deb [arch=amd64] http://packages.onedata.org/apt/ubuntu/1902 xenial main" >&3 && \
+    echo "deb-src [arch=amd64] http://packages.onedata.org/apt/ubuntu/1902 xenial main" >&3 && \
+    exec 3>&-
+RUN apt-get install curl -y
+RUN curl http://packages.onedata.org/onedata.gpg.key | apt-key add -
+RUN apt-get update && curl http://packages.onedata.org/onedata.gpg.key | apt-key add -
+RUN apt-get install python3-setuptools libgdal-dev oneclient=19.02.1-1~xenial -y
 RUN adduser jovyan sudo
 RUN echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 RUN echo 'Frontend installing...'
 RUN git clone https://github.com/extreme-datacloud/xdc_lfw_frontend
-RUN wget -O ./xdc_lfw_frontend/satellites.ipynb https://raw.githubusercontent.com/IFCA/wq_sat-Dockerfile/master/xdc_sat.ipynb
-RUN wget -O ./xdc_lfw_frontend/xdc_sat_nb.py https://raw.githubusercontent.com/IFCA/wq_sat-Dockerfile/master/xdc_sat_nb.py
+RUN wget -O /home/jovyan/satellites.ipynb https://raw.githubusercontent.com/IFCA/wq_sat-Dockerfile/master/xdc_sat.ipynb
+RUN wget -O /home/jovyan/xdc_sat_nb.py https://raw.githubusercontent.com/IFCA/wq_sat-Dockerfile/master/xdc_sat_nb.py
 RUN exec 3<> ./xdc_lfw_frontend/regions.json && \
     echo '{"CdP":{"coordinates":{"W":-2.83 ,"S":41.82,"E":-2.67,"N":41.90}}, "Ebro":{"coordinates":{"W": -4.132, "S": 42.968, "E": -3.824, "N": 43.06}}}' >&3 && \
     exec 3>&-
 RUN chown -R jovyan:users ./xdc_lfw_frontend/*
-RUN mv ./xdc_lfw_frontend/* /home/jovyan/
 RUN mv ./xdc_lfw_frontend/.HY_MODEL.yml /home/jovyan/
 RUN mv ./xdc_lfw_frontend/.SAT_DATA.yml /home/jovyan/
+RUN mv ./xdc_lfw_frontend/XDC_nb.py /home/jovyan/
+RUN mv ./xdc_lfw_frontend/XDC.ipynb /home/jovyan/
+RUN mv ./xdc_lfw_frontend/test.sh /home/jovyan/
+RUN /opt/conda/bin/pip install pandas matplotlib netCDF4 xmltodict ipywidgets ipyleaflet
+RUN /opt/conda/bin/pip install GDAL==$(gdal-config --version | awk -F'[.]' '{print $1"."$2}') --global-option=build_ext --global-option="-I/usr/include/gdal"
 RUN mkdir datasets
+RUN jupyter nbextension enable --py --sys-prefix widgetsnbextension
 ENV ONECLIENT_PROVIDER_HOSTNAME 'cloud-90-147-75-163.cloud.ba.infn.it'
 RUN rm -rf work xdc_lfw_data netcdf-4.4.0 xdc_lfw_frontend
 RUN chown -R jovyan:users ./test.sh
 RUN chmod 777 test.sh
+#The following env variables will be passed thorugh the orchestrator
+ENV WQ_REGION CdP
+ENV WQ_START_DATE 01-01-2018
+ENV WQ_END_DATE 18-01-2018
+ENV WQ_ACTION cloud_coverage
+ENV ONEDATA_TOKEN 'H4rGIxCMYsJSHQg1v6BpLGAwnDL01EE6AFAs1BCg'
+ENV ONEDATA_URL 'https://vm027.pub.cloud.ifca.es'
+ENV ONEDATA_API '/api/v3/oneprovider/'
+ENV ONEDATA_SPACE XDC_LifeWatch
+ENV ONEDATA_ZONE 'https://onezone.cloud.cnaf.infn.it'
+ENV DOWNLOAD_FOLDER datasets
+ENV ONECLIENT_PROVIDER_HOSTNAME 'vm027.pub.cloud.ifca.es'
