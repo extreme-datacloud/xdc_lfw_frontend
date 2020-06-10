@@ -710,7 +710,7 @@ def menu():
     onedata_wid.value = os.environ['ONECLIENT_AUTHORIZATION_TOKEN']
 
     region_buttons = widgets.ToggleButtons(
-        options=['CdP', 'Sanabria'],
+        options=['CdP', 'Sanabria', 'ElVal'],
         description='Reservoirs/Lakes:',
     )
     ini_date = widgets.DatePicker(
