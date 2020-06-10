@@ -96,17 +96,14 @@ def plot_satellite(region_buttons, ini_date, end_date, actions):
 
 def find_dataset_type(start_date, end_date, typ, onedata_token):
     headers = {"X-Auth-Token": onedata_token}
-    url = ("https://cloud-90-147-75-163.cloud.ba.infn.it"
-           "/api/v3/oneprovider/spaces/17d670040b30511bc4848cab56449088")
-    r = requests.get(url, headers=headers)
-    space_id = json.loads(r.content)['spaceId']
+    space_id = get_onedata_space_id()
     print('Onedata space ID: %s' % space_id)
     index_name = 'region_type__query'
     # onedata_cdmi_api = ("https://cloud-90-147-75-163.cloud.ba.infn.it"
     #                    "/cdmi/cdmi_objectid/")
-    url = "https://cloud-90-147-75-163.cloud.ba.infn.it/api/v3"
+    url = os.environ['ONEDATA_URL']
     url = url + "/oneprovider/spaces/"
-    url = url + space_id + "/indexes/" + index_name + "/query"
+    url = url + space_id + "/views/" + index_name + "/query"
     r = requests.get(url, headers=headers)
     response = json.loads(r.content)
     result = []
@@ -133,36 +130,42 @@ def find_dataset_type(start_date, end_date, typ, onedata_token):
 
 def find_models(onedata_token):
     headers = {"X-Auth-Token": onedata_token}
-    url = ("https://cloud-90-147-75-163.cloud.ba.infn.it"
-           "/api/v3/oneprovider/spaces/17d670040b30511bc4848cab56449088")
-    r = requests.get(url, headers=headers)
-    space_id = json.loads(r.content)['spaceId']
-    print('Searching models')
+    space_id = get_onedata_space_id(onedata_token)
     index_name = 'models_region_query'
-    # onedata_cdmi_api = ("https://cloud-90-147-75-163.cloud.ba.infn.it" +
-    #                     + "/cdmi/cdmi_objectid/")
-    url = ("https://cloud-90-147-75-163.cloud.ba.infn.it"
-           "/api/v3/oneprovider/spaces/%s/indexes/%s/query" % (
+    if index_name not in list_onedata_views(onedata_token):
+        create_model_view(onedata_token)
+    url = (os.environ['ONEDATA_URL'] +
+           "/api/v3/oneprovider/spaces/%s/views/%s/query?spatial=false&stall=false" % (
                space_id, index_name))
     r = requests.get(url, headers=headers)
     response = json.loads(r.content)
     return response
 
 
+def get_onedata_space_id(onedata_token):
+    headers = {"X-Auth-Token": onedata_token}
+    url = (os.environ['ONEDATA_URL'] +
+       "/api/v3/oneprovider/spaces/")
+    r = requests.get(url, headers=headers)
+    space_id = ''
+    for e in json.loads(r.content):
+        if e['name'] == os.environ['ONEDATA_SPACE']:
+            space_id = e['spaceId']
+            
+    return space_id
+    
+    
 def is_downloaded(onedata_token, filename):
     headers = {"X-Auth-Token": onedata_token}
-    url = ("https://cloud-90-147-75-163.cloud.ba.infn.it"
-           "/api/v3/oneprovider/spaces/17d670040b30511bc4848cab56449088")
-    r = requests.get(url, headers=headers)
-    space_id = json.loads(r.content)['spaceId']
+    space_id = get_onedata_space_id(onedata_token)
     
     index_name = 'filename'
     if index_name not in list_onedata_views(onedata_token):
         create_filename_view(onedata_token)
     # onedata_cdmi_api = ("https://cloud-90-147-75-163.cloud.ba.infn.it" +
     #                     + "/cdmi/cdmi_objectid/")
-    url = ("https://cloud-90-147-75-163.cloud.ba.infn.it"
-           "/api/v3/oneprovider/spaces/%s/indexes/%s/query?spatial=false&stall=false" % (
+    url = (os.environ['ONEDATA_URL'] +
+           "/api/v3/oneprovider/spaces/%s/vies/%s/query?spatial=false&stall=false" % (
                space_id, index_name))
     r = requests.get(url, headers=headers)
     response = json.loads(r.content)
@@ -178,11 +181,11 @@ def find_closest_date(onedata_token, date, region):
     headers = {"X-Auth-Token": onedata_token}
     seconds_since_epoch = datetime.datetime.now().timestamp()
     seconds_since_epoch = int(seconds_since_epoch)*1000
-    space_id = "17d670040b30511bc4848cab56449088"
+    space_id = get_onedata_space_id(onedata_token)
     index_name = 'view_date_landsat'
     if index_name not in list_onedata_views(onedata_token):
         create_filename_view(onedata_token)
-    url = ("https://cloud-90-147-75-163.cloud.ba.infn.it"
+    url = (os.environ['ONEDATA_URL'] +
            "/api/v3/oneprovider/spaces/%s/views/%s/query?spatial=false&stall=false" % (
                space_id, index_name))
     r = requests.get(url, headers=headers)
@@ -198,39 +201,44 @@ def find_closest_date(onedata_token, date, region):
 
 def list_onedata_views(onedata_token):
     headers = {"X-Auth-Token": onedata_token}
-    space_id = "17d670040b30511bc4848cab56449088"
-    url = ("https://cloud-90-147-75-163.cloud.ba.infn.it"
+    space_id = get_onedata_space_id(onedata_token)
+    url = (os.environ['ONEDATA_URL'] +
        "/api/v3/oneprovider/spaces/%s/views/" % 
            space_id)
     r = requests.get(url, headers=headers)
     return json.loads(r.content)["views"]
 
 def create_filename_view(onedata_token):
-    headers = {"X-Auth-Token": onedata_token}
-    url = ("https://cloud-90-147-75-163.cloud.ba.infn.it"
-           "/api/v3/oneprovider/spaces/17d670040b30511bc4848cab56449088")
-    r = requests.get(url, headers=headers)
-    space_id = json.loads(r.content)['spaceId']
+    headers = {"X-Auth-Token": onedata_token, "Content-type": "application/javascript"}
+    space_id = get_onedata_space_id(onedata_token)
     data = open('views/view_filename.js','rb')
     print('Searching models')
     index_name = 'filename'
     # onedata_cdmi_api = ("https://cloud-90-147-75-163.cloud.ba.infn.it" +
     #                     + "/cdmi/cdmi_objectid/")
-    url = ("https://cloud-90-147-75-163.cloud.ba.infn.it"
+    url = (os.environ['ONEDATA_URL'] +
            "/api/v3/oneprovider/spaces/%s/views/%s?spatial=false" % (
                space_id, index_name))
     r = requests.put(url, data = data, headers = headers)
     return r.status_code
     
 def create_landsat_date_view(onedata_token):
-    headers = {"X-Auth-Token": onedata_token}
-    url = ("https://cloud-90-147-75-163.cloud.ba.infn.it"
-           "/api/v3/oneprovider/spaces/17d670040b30511bc4848cab56449088")
-    r = requests.get(url, headers=headers)
-    space_id = json.loads(r.content)['spaceId']
+    headers = {"X-Auth-Token": onedata_token, "Content-type": "application/javascript"}
+    space_id = get_onedata_space_id(onedata_token)
     data = open('views/view_dates_landsat.js','rb')
     index_name = 'view_date_landsat'
-    url = ("https://cloud-90-147-75-163.cloud.ba.infn.it"
+    url = (os.environ['ONEDATA_URL'] +
+           "/api/v3/oneprovider/spaces/%s/views/%s?spatial=false" % (
+               space_id, index_name))
+    r = requests.put(url, data = data, headers = headers)
+    return r.status_code
+    
+def create_model_view(onedata_token):
+    headers = {"X-Auth-Token": onedata_token, "Content-type": "application/javascript"}
+    space_id = get_onedata_space_id(onedata_token)
+    data = open('views/view_models_region_query.js','rb')
+    index_name = 'models_region_query'
+    url = (os.environ['ONEDATA_URL'] +
            "/api/v3/oneprovider/spaces/%s/views/%s?spatial=false" % (
                space_id, index_name))
     r = requests.put(url, data = data, headers = headers)
@@ -572,7 +580,6 @@ def get_access_token(url):
     url = url + IAM_CLIENT_ID + '&client_secret=' + IAM_CLIENT_SECRET
 
     r = requests.post(url, headers=headers)  # GET token
-    print("Rquesting access token: %s" % r.status_code)
     # 200 means that the resource exists
     access_token = json.loads(r.content)['access_token']
     return access_token
@@ -595,11 +602,11 @@ def launch_orchestrator_job(model_type, model_path):
         "parameters": {
             "cpus": 1,
             "mem": "4096 MB",
-            "onedata_provider": "cloud-90-147-75-163.cloud.ba.infn.it",
-            "model_space_name": "LifeWatch",
+            "onedata_provider": os.environ['ONECLIENT_PROVIDER_HOSTNAME'],
+            "model_space_name": os.environ['ONEDATA_SPACE'],
             "model_path": model_path,
             "output_filenames": "trim-test_1.nc",
-            "onedata_zone": "https://onezone.cloud.cnaf.infn.it",
+            "onedata_zone": os.environ['ONEDATA_ZONE'],
             "input_config_file": "config_d_hydro.xml"
             },
         "template": tosca
@@ -635,14 +642,14 @@ def launch_orchestrator_sat_job(start_date, end_date,
         "parameters": {
             "cpus": 1,
             "mem": "4096 MB",
-            "onedata_provider": "cloud-90-147-75-163.cloud.ba.infn.it",
-            "sat_space_name": "LifeWatch",
+            "onedata_provider": os.environ['ONECLIENT_PROVIDER_HOSTNAME'],
+            "sat_space_name": os.environ['ONEDATA_SPACE'],
             "sat": sat_type,
             "sat_path": sat_path,
             "region": region,
             "start_date": start_date.strftime('%Y-%m-%d'),
             "end_date": end_date.strftime('%Y-%m-%d'),
-            "onedata_zone": "https://onezone.cloud.cnaf.infn.it"
+            "onedata_zone": os.environ['ONEDATA_ZONE']
         },
         "template": tosca
     }
@@ -756,7 +763,8 @@ def menu():
                 prepare_model(
                     ini_date.value, end_date.value,
                     region_buttons.value,
-                    '/home/jovyan/datasets/LifeWatch/', onedata_wid.value)
+                    '/home/jovyan/datasets/%s/' % os.environ['ONEDATA_SPACE'],
+                    onedata_wid.value)
             else:
                 plot_satellite(region_buttons, ini_date, end_date, actions)
 
@@ -794,6 +802,11 @@ def menu():
     vbox2 = VBox(children=[selection_jobs, button2, out2])
 
     # Model visualization
+    if os.environ['ONECLIENT_AUTHORIZATION_TOKEN'] == '':
+        headers = {"X-Auth-Token": "eXtreme-DataCloud:" + get_access_token(None)}
+        url = os.environ['ONEDATA_ZONE'] + "/api/v3/onezone/user/client_tokens"
+        r = requests.get(url, headers=headers)
+        os.environ['ONECLIENT_AUTHORIZATION_TOKEN'] = json.loads(r.content)['tokens'][0]
     onedata_token = os.environ['ONECLIENT_AUTHORIZATION_TOKEN']
     models = find_models(onedata_token)
     opt = []
@@ -834,7 +847,7 @@ def menu():
         description='Show model output',
     )
 
-    ruta = '/home/jovyan/datasets/LifeWatch/'
+    ruta = '/home/jovyan/datasets/%s/' % os.environ['ONEDATA_SPACE']
 
     out3 = widgets.Output()
 
