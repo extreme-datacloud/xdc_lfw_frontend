@@ -13,6 +13,19 @@ RUN apt-get update && \
 # Install pymysql
 RUN ls
 RUN git clone https://github.com/extreme-datacloud/xdc_lfw_data.git
+
+ENV WQ_REGION CdP
+ENV WQ_START_DATE 01-01-2018
+ENV WQ_END_DATE 18-01-2018
+ENV WQ_ACTION cloud_coverage
+ENV ONEDATA_TOKEN 'H4rGIxCMYsJSHQg1v6BpLGAwnDL01EE6AFAs1BCg'
+ENV ONEDATA_URL 'https://vm027.pub.cloud.ifca.es'
+ENV ONEDATA_API '/api/v3/oneprovider/'
+ENV ONEDATA_SPACE Cyberhab
+ENV ONEDATA_ZONE 'https://onezone.cloud.cnaf.infn.it'
+ENV DOWNLOAD_FOLDER datasets
+ENV ONECLIENT_PROVIDER_HOSTNAME 'vm027.pub.cloud.ifca.es'
+
 #Create config file
 RUN rm ./xdc_lfw_data/wq_modules/config.py
 RUN exec 3<> ./xdc_lfw_data/wq_modules/config.py && \
@@ -25,13 +38,13 @@ RUN exec 3<> ./xdc_lfw_data/wq_modules/config.py && \
     echo "" >&3 && \
     echo "    #onedata path and info" >&3 && \
     echo "    onedata_token = \"$ONEDATA_TOKEN\"" >&3 && \
-    echo "    onedata_url = \"https://cloud-90-147-75-163.cloud.ba.infn.it\"" >&3 && \
+    echo "    onedata_url = \"$ONEDATA_URL\"" >&3 && \
     echo "    onedata_api = \"$ONEDATA_API\"" >&3 && \
     echo "    onedata_user = \"user\"" >&3 && \
     echo "    onedata_space = \"$ONEDATA_SPACE\"" >&3 && \
     echo "" >&3 && \
     echo "    #onedata path" >&3 && \
-    echo "    datasets_path = \"/home/jovyan/datasets/LifeWatch\"" >&3 && \
+    echo "    datasets_path = \"/home/jovyan/datasets/$ONEDATA_SPACE\"" >&3 && \
     echo "" >&3 && \
     echo "#local path and info" >&3 && \
     echo "local_path = \"/home/jovyan/lfw_datasets\"" >&3 && \
@@ -80,23 +93,11 @@ RUN mv ./xdc_lfw_frontend/.SAT_DATA.yml /home/jovyan/
 RUN mv ./xdc_lfw_frontend/XDC_nb.py /home/jovyan/
 RUN mv ./xdc_lfw_frontend/XDC.ipynb /home/jovyan/
 RUN mv ./xdc_lfw_frontend/test.sh /home/jovyan/
+RUN mv ./xdc_lfw_frontend/views /home/jovyan/
 RUN /opt/conda/bin/pip install pandas matplotlib netCDF4 xmltodict ipywidgets ipyleaflet
 RUN /opt/conda/bin/pip install GDAL==$(gdal-config --version | awk -F'[.]' '{print $1"."$2}') --global-option=build_ext --global-option="-I/usr/include/gdal"
 RUN mkdir datasets
 RUN jupyter nbextension enable --py --sys-prefix widgetsnbextension
-ENV ONECLIENT_PROVIDER_HOSTNAME 'cloud-90-147-75-163.cloud.ba.infn.it'
 RUN rm -rf work xdc_lfw_data netcdf-4.4.0 xdc_lfw_frontend
 RUN chown -R jovyan:users ./test.sh
 RUN chmod 777 test.sh
-#The following env variables will be passed thorugh the orchestrator
-ENV WQ_REGION CdP
-ENV WQ_START_DATE 01-01-2018
-ENV WQ_END_DATE 18-01-2018
-ENV WQ_ACTION cloud_coverage
-ENV ONEDATA_TOKEN 'H4rGIxCMYsJSHQg1v6BpLGAwnDL01EE6AFAs1BCg'
-ENV ONEDATA_URL 'https://vm027.pub.cloud.ifca.es'
-ENV ONEDATA_API '/api/v3/oneprovider/'
-ENV ONEDATA_SPACE XDC_LifeWatch
-ENV ONEDATA_ZONE 'https://onezone.cloud.cnaf.infn.it'
-ENV DOWNLOAD_FOLDER datasets
-ENV ONECLIENT_PROVIDER_HOSTNAME 'vm027.pub.cloud.ifca.es'
